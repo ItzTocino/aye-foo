@@ -1,0 +1,82 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    name: Build and test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      # Compiles, runs the unit tests, translates every JSP, builds the WAR,
+      # then boots it and checks the pages (PagesIT).
+      - run: mvn -B verify
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: test-reports
+          path: |
+            target/surefire-reports
+            target/failsafe-reports
+
+  schema:
+    name: Migrations on MySQL 8
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DB_URL: jdbc:mysql://127.0.0.1:3306/saveourworld?sslMode=DISABLED&allowPublicKeyRetrieval=true&connectionTimeZone=UTC
+      DB_USER: root
+      DB_PASSWORD: root
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: saveourworld
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: maven
+      - name: Apply the baseline
+        run: mvn -B compile exec:java -Dexec.mainClass=org.communityapp.db.Migrate 2>&1 | tee apply.log
+      - name: All migrations applied exactly once
+        run: |
+          expected=$(find src/main/resources/db/migration -maxdepth 1 -name 'V[0-9]*__*.sql' | wc -l)
+          grep -q "migrations applied: $expected" apply.log
+      - name: Re-running applies nothing
+        run: |
+          mvn -B compile exec:java -Dexec.mainClass=org.communityapp.db.Migrate 2>&1 | tee rerun.log
+          grep -q "migrations applied: 0" rerun.log
+      - name: The schema has 17 tables and 4 views
+        run: |
+          tables=$(MYSQL_PWD=root mysql -h 127.0.0.1 -uroot -N -e \
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='saveourworld' AND table_type='BASE TABLE'")
+          views=$(MYSQL_PWD=root mysql -h 127.0.0.1 -uroot -N -e \
+            "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='saveourworld' AND table_type='VIEW'")
+          test "$tables" = "17"
+          test "$views" = "4"
+      - name: An edited migration is refused
+        run: |
+          sed -i 's/P1 baseline/P1 baseline tampered/' src/main/resources/db/migration/V001__init.sql
+          if mvn -B -q compile exec:java -Dexec.mainClass=org.communityapp.db.Migrate; then
+            echo "the migrator accepted a changed checksum"
+            exit 1
+          fi

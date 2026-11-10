@@ -1,0 +1,21 @@
+# Local development database. Credentials here are dev-only and never used in staging or production.
+services:
+  db:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: saveourworld
+      MYSQL_USER: saveourworld
+      MYSQL_PASSWORD: ${DB_PASSWORD:-saveourworld}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    ports:
+      - "3306:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-p${DB_ROOT_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  db-data:

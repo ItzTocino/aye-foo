@@ -1,0 +1,48 @@
+:root {
+  /* Colour: warm paper, channel water, marsh, one rust accent for action. */
+  --paper: #F6F2E9;
+  --sand: #EDE6D6;
+  --ink: #14201D;
+  --ink-soft: #40514C;
+  --bay-deep: #0F3B43;
+  --bay-mid: #1D6B73;
+  --marsh: #3F6B3A;
+  --clay: #A8492C;
+  --danger: #8E2F22;
+  --line: #D3C7B2;
+  --white: #FFFFFF;
+
+  /* Type */
+  --font-display: Georgia, "Times New Roman", serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --step-display: clamp(3.5rem, 8vw, 7.75rem);
+  --step-h3: 1.25rem;
+  --step-body: 1.0625rem;
+  --step-ui: 0.9375rem;
+  --step-micro: 0.75rem;
+
+  /* Space and shape */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+  --radius: 2px;
+  --shadow: 0 1px 0 rgba(20, 32, 29, .04);
+  --max: 1320px;
+  --gutter: clamp(20px, 5vw, 64px);
+
+  /* Motion and layers */
+  --duration-micro: 120ms;
+  --duration-default: 160ms;
+  --duration-panel: 240ms;
+  --ease: cubic-bezier(.2, .6, .2, 1);
+  --z-nav: 10;
+  --z-modal: 20;
+  --z-toast: 30;
+}

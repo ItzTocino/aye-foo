@@ -1,0 +1,19 @@
+target/
+logs/
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# Local secrets and environment overrides
+.env
+*.local
+
+# OS noise
+.DS_Store
+Thumbs.db
